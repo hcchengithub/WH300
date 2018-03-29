@@ -1,0 +1,5 @@
+# shutil mybinder.org does not support shutil 
+tensorflow
+numpy
+pandas
+peforth

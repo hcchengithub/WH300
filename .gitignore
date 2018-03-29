@@ -1,0 +1,8 @@
+.ipynb_checkpoints/
+iris/logs
+*.xls?
+*.xls?
+*.xls
+*.csv
+*.msg
+model/
