@@ -4,25 +4,47 @@
     <o> 
     <h2>WKS RD 庫房月報表 over300d 將「手工標注」導回總表</h2>
     <h4><input type=checkbox></input> 用本程式的 excel （在 Task Bar 上閃爍的那個） 打開庫房的帳表。</h4>
-    <h4><input type=checkbox></input> 對 Aging 欄排序，最老的在最上面。</h4>
-    <h4><input type=checkbox></input> 若有新資料，請修改「excel帳表的參數.f」檔。</h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;檢查：</h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;指定 excel 表內任何一格，回來到最下面 command line</h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用命令 "cell@ . cr" 查看 activeCell 的內容，確定是這支 excel 無誤。
+    <h4><input type=checkbox></input> 切到「總表」 Worksheet（一般名為 Detail 者）對 Aging 欄排序，最老的在最上面。</h4>
+    <h4><input type=checkbox></input> 「總表」 Row#1 表頭之上、表右、底之外的雜物都刪除乾淨(不要不信邪，看起來空的也都刪一遍)</h4>
+    <h4><input type=checkbox></input> 表頭欄位內容順序如下，多的都刪掉：</h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Customer'     </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'ProjectName'  </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'PartNo'       </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'PartName'     </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Barcode'      </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'ActionPlan'   </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'TargetDate'   </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'PM_CFM'       </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'MStatus'      </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'RefNo'        </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Borrower'     </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'BorrowerID'   </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'BorrowerDEPT' </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Dept'         </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'QTY'          </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Price'        </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Days'         </h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;'Tag'          </h4>
+    <h4><input type=checkbox></input> 核對、訂正「excel帳表的參數.f」檔裡的參數。</h4>
     <h4>&nbsp;&nbsp;&nbsp;&nbsp;帳表Excel參數設定檔 <input id=initFile type=text size=80% value="c:\Users\hcche\Documents\GitHub\WH300\excel帳表的參數.f"></h4>
     <h4>&nbsp;&nbsp;&nbsp;&nbsp;命令 "column . space row . cr" 可得 activeCell 的座標。
-    <h4><input type=checkbox></input> 按下「執行」約需兩分半鐘的時間。</h4>
-    <h4><input type=checkbox></input> 此時「總表」已獲 Tag 欄位。保存 excel 帳表。</h4>
+    <h4><input type=checkbox></input> 按下「執行」約需兩分半鐘的時間，如果太慢可能以上哪裡有錯。</h4>
 	<h4><input type=button onclick="vm.execute('Labeled資料表>倒填回總表')" 
 		value="執行"
 		style="width:120px;height:40px;font-size:20px;margin-left:50px;"></h4>
+    <h4><input type=checkbox></input> 此時「總表」已獲 Tag 欄位。保存 excel 帳表。</h4>
     </o> er drop
 
     \ excel 帳表的參數 從外面手動設定
     
     char over300d    value 樞紐分析表名 // ( -- str ) worksheet name 英文大小寫不分
     char Detail      value 總表名       // ( -- str ) worksheet name 英文大小寫不分
-    js> [1,1,23,271] value 樞紐分析表「整表」座標   // ( -- array ) [左上col,row,右下col,row]
     js> [5,4,22,270] value 樞紐分析表「資料」座標   // ( -- array ) [左上col,row,右下col,row]
     3                value 樞紐分析表「部門代碼row」 // ( -- int )
-    3                value 樞紐分析表「料號column」 // ( -- int )
+    char b           value 樞紐分析表「料號column」 // ( -- int )
     char u           value 總表Tag欄     // ( -- int ) 欄位英文字母,大小寫不分
     char c           value 總表PartNo欄  // ( -- int ) 欄位英文字母,大小寫不分
     char n           value 總表部門欄    // ( -- int ) 欄位英文字母,大小寫不分
@@ -45,18 +67,17 @@
         樞紐分析表 :: activate() \ 切換到「樞紐分析表」
         
         ( 參考座標在原點上 ) 1 1 goto <js>
-        var et = vm.v('樞紐分析表「整表」座標')         // entire table    
         var da = vm.v('樞紐分析表「資料」座標')         // data area   
         var st_row = vm.v('樞紐分析表「部門代碼row」')  // The row of section ID
-        var pn_col = vm.v('樞紐分析表「料號column」')   // The column of partNo
+        var pn_col = vm.dictate('樞紐分析表「料號column」 :> toUpperCase() letter>column#').pop()   // The column of partNo
         var qty,partn,section, 料號=[], 部門=[], 數量=[]
         var csv = "料號,部門,數量,\n"
-        for (var row=et[1]; row<=et[3]; row++){
-            for (var col=et[0]; col<=et[2]; col++){
+        for (var row=da[1]; row<=da[3]; row++){
+            for (var col=da[0]; col<=da[2]; col++){
                 var cell = push(col-1).push(row-1).execute('offset').pop()
-                var inDA = col >= da[0] && col <= da[2] && row >= da[1] && row <= da[3]  
+                // var inDA = col >= da[0] && col <= da[2] && row >= da[1] && row <= da[3]  
                 if (cell.value) {
-                    if (inDA && cell.Interior.Color!=16777215){  // Not white means Tagged
+                    if (cell.Interior.Color!=16777215){  // Not white means Tagged
                         qty = cell.value 
                         section = push(cell.column-1).push(st_row-1).execute('offset').pop().value 
                         partn = push(pn_col-1).push(cell.row-1).execute('offset').pop().value 
@@ -64,6 +85,7 @@
                         料號.push(partn)
                         部門.push(section)
                         數量.push(qty)
+                        // if(vm.debug){vm.jsc.prompt='11>';eval(vm.jsc.xt)}
                     }
                 }
             }
