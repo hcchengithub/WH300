@@ -5,4 +5,5 @@ iris/logs
 *.xls
 *.csv
 *.msg
+*.lnk
 model/
